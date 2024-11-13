@@ -5,8 +5,12 @@ letter_mappings = { 'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7, 'h':
                     'i': 9, 'j': 10, 'k': 11, 'l': 12, 'm': 13, 'n': 14, 'o': 15, 'p': 16,
                     'q': 17, 'r': 18, 's': 19, 't': 20, 'u': 21, 'v': 22, 'w': 23, 'x': 24,
                     'y': 25, 'z': 26 }
+english_freqs =    {'a': 8.5, 'b': 2.07, 'c': 4.54, 'd': 3.38, 'e': 11.16, 'f': 1.81, 'g': 2.47, 'h': 3,
+                        'i': 7.54, 'j': 0.2, 'k': 1.1, 'l': 5.49, 'm': 3.01, 'n': 6.65, 'o': 7.16, 'p': 3.17,
+                        'q': 0.2, 'r': 7.58, 's': 5.74, 't': 6.95, 'u': 3.63, 'v': 1.01, 'w': 1.29, 'x': 0.29,
+                        'y': 1.78, 'z': 0.27}
 
-# split input_text to groups (list of lists) based on key. For example if key = 3 will have 3 groups and in the first group will be char 1, 4, 7, etc
+
 def split(key, input_text):
     n = len(input_text)     
     groups = [[] for _ in range(key)]
@@ -14,7 +18,6 @@ def split(key, input_text):
         groups[i % key].append(input_text[i])
     return groups
 
-# returns the index_of_coincidence of a text, given as a list of characters (text_list)
 def index_of_coincidence(text_list, n):
     letter_freqs = {}
     
@@ -30,16 +33,9 @@ def index_of_coincidence(text_list, n):
     
     return ic  
 
-# takes a list of decrypted characters (each group that was split) and decrypts it because each group has been encrypted with Caesar
-# Returns the shift which corresponds to a letter of the key.
 def caesar_decrypt(group):
     letter_freqs = {}
-    english_freqs =    {'a': 8.5, 'b': 2.07, 'c': 4.54, 'd': 3.38, 'e': 11.16, 'f': 1.81, 'g': 2.47, 'h': 3,
-                        'i': 7.54, 'j': 0.2, 'k': 1.1, 'l': 5.49, 'm': 3.01, 'n': 6.65, 'o': 7.16, 'p': 3.17,
-                        'q': 0.2, 'r': 7.58, 's': 5.74, 't': 6.95, 'u': 3.63, 'v': 1.01, 'w': 1.29, 'x': 0.29,
-                        'y': 1.78, 'z': 0.27}
 
-    # Convert all letters to lowercase for processing
     group = [char.lower() for char in group]
 
     for letter in group:
@@ -76,21 +72,18 @@ def caesar_decrypt(group):
         
     return key_char
 
-# receives an input_file and does the decryption. It outputs 5 possible plaintexts with keys and ics
-def vigenere_decrypt(input_file):
-    # whole input text. with commas etc
-    input_text = []
 
-    # input text but only letters
-    input_text_letters = []
+def vigenere_decrypt():
+    # Check if the input was provided through the command line
+    if len(sys.argv) < 2:
+        print("Please provide the encrypted text as a command-line argument.")
+        sys.exit(1)
 
-    try:
-        file = open(input_file, 'r')
-        input_text = list(file.read())
-        # list of letters of input text
-        input_text_letters = [char.lower() for char in input_text if char.isalpha()]
-    finally:
-        file.close()
+    # Retrieve the encrypted text from the command line argument
+    input_text = sys.argv[1]
+
+    # Filter the text to only keep alphabetic characters and convert to lowercase
+    input_text_letters = [char.lower() for char in input_text if char.isalpha()]
 
     key = 2
     n = len(input_text_letters)
@@ -100,20 +93,24 @@ def vigenere_decrypt(input_file):
         decrypted_text = []
         mean_ic = 0
 
+        # Split the input text into groups based on the key
         groups = split(key, input_text_letters)
         for group in groups:
             if len(group) > 1:
                 mean_ic += index_of_coincidence(group, len(group))
-        
+
+        # Calculate the mean index of coincidence
         mean_ic /= key
 
-        if mean_ic >= 0.06 and mean_ic <= 0.07:     
+        if mean_ic >= 0.06 and mean_ic <= 0.07:
             vigenere_key = ""
+            # Decrypt each group with Caesar cipher to get part of the Vigenère key
             for group in groups:
                 vigenere_key += caesar_decrypt(group)
 
             key_counter = 0
-            for i in range (0, len(input_text)):
+            # Decrypt the entire text using the Vigenère key
+            for i in range(0, len(input_text)):
                 if key_counter == len(vigenere_key):
                     key_counter = 0
                 if input_text[i].isalpha():
@@ -122,17 +119,19 @@ def vigenere_decrypt(input_file):
                 else:
                     decrypted_text.append(input_text[i])
 
+
             print()
             decrypted_text_str = ''.join(decrypted_text)
-            print(vigenere_key + '\n\n' + decrypted_text_str + '\n')
+            print(vigenere_key + '\n\n' + decrypted_text_str + '\n' + '\n' + '\n')
             print(mean_ic)
-            print("-----------------------------------------------------------------------------------------")
+
             ic_counter += 1
 
         key += 1
-        if (key == n):
+        if key == n:
             break
 
-input_file = sys.argv[1]
-vigenere_decrypt(input_file)
+
+vigenere_decrypt()
+
 
