@@ -130,6 +130,8 @@ def vigenere_decrypt():
         key += 1
         if key == n:
             break
+            
+vigenere_decrypt()
 
 
 vigenere_decrypt()
